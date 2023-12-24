@@ -1,4 +1,4 @@
-CFLAGS=" -arch x86_64 -masm=intel -Wno-implicit-function-declaration -O0"
+CFLAGS=" -arch x86_64 -Wno-implicit-function-declaration -O0"
 BUILD_DIR=./build
 
 set -xe

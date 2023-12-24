@@ -5,6 +5,9 @@
 
 char* OUTPUT_FILENAME = "code.s";
 
+// We are usig AT&T syntax for x86 assembly
+// Reference sheet used: https://web.stanford.edu/class/archive/cs/cs107/cs107.1242/resources/x86-64-reference.pdf
+
 void start_assembly(FILE* out_file){
 	fprintf(out_file, "  .globl _entrypoint\n");
 	fprintf(out_file, "_entrypoint:\n");
@@ -12,29 +15,57 @@ void start_assembly(FILE* out_file){
 	 * This is needed because our runtime is compiled with C and it uses that convention.
 	 * But internally in this language, we need not use calling conventions as long as it is simple
 	*/
-	fprintf(out_file, "  push rbp\n");
-	fprintf(out_file, "  mov rbp,rsp\n");
+	fprintf(out_file, "  push %%rbp\n");
+	fprintf(out_file, "  mov %%rsp,%%rbp\n");
+}
+
+void prolog(FILE* out_file){
+	// allot 8 bytes space for storing of local variables
+	fprintf(out_file, "  sub $8,%%rsp\n");
+}
+
+void epilog(FILE* out_file){
+	fprintf(out_file, "  mov %%rbp,%%rsp\n");
 }
 
 
 
 void end_assembly(FILE* out_file){
 	// C calling convention for x64
-	fprintf(out_file, "  pop rbp\n");
+	fprintf(out_file, "  pop %%rbp\n");
 	fprintf(out_file, "  ret\n");
 }
 
-// now we need to write the actual compiler
-/*
- *
-int entrypoint(){
-	return 18;
+void evaulate_expression(FILE* out_file, char* expr_type, int param1, int param2) {
+	if(strcmp(expr_type,"add") == 0) {
+		fprintf(out_file, "  mov $%d,%%rax\n", param1);
+		fprintf(out_file, "  mov $%d,%%r10\n", param2);
+		fprintf(out_file, "  add $%%r10,%%rax\n");
+	} else if(strcmp(expr_type, "sub") == 0) {
+		fprintf(out_file, "  mov $%d,%%rax\n", param1);
+		fprintf(out_file, "  mov $%d,%%r10\n", param2);
+		fprintf(out_file, "  sub %%r10,%%rax\n");
+
+	} else if(strcmp(expr_type, "mul") == 0) {
+		fprintf(out_file, "  mov $%d,%%rax\n", param1);
+		fprintf(out_file, "  mov $%d,%%r10\n", param2);
+		fprintf(out_file, "  imul %%r10,%%rax\n");
+
+	} else if(strcmp(expr_type, "div") == 0) {
+		// TO BE IMPLEMENTED
+	} else if(strcmp(expr_type, "add1") == 0) {
+		fprintf(out_file, "  mov $%d,%%rax\n", param1);
+		fprintf(out_file, "  add %%rax,1\n");
+
+	} else if(strcmp(expr_type, "sub1") == 0) {
+		fprintf(out_file, "  mov $%d,%%rax\n", param1);
+		fprintf(out_file, "  sub %%rax,1\n");
+
+	}
 }
 
-
-it should be able to generate assembly code for the above program
-we are using C calling convention since we are using a C runtime
-*/
+// NEXT FOCUS: Make it such that our compiler takes in expressions and
+// evaluate them and set the result in %rax
 
 int main(int _argc, char** argv){
 	// extract the arguments
@@ -58,67 +89,32 @@ int main(int _argc, char** argv){
 		exit(1);
 	}
 
-	// TODOS
-	// 1. Lexing and Parsing
-	// 2. Types
-	//	- Int [x]
-	//	- Char
-	// 3. Unary Operators
-	//	- ++ (add1)
-	//	- -- (sub1)
-	// 4. Binary Operators
-	//	- + (add) [x]
-	//	- - (sub) [x]
-	//	- * (mult) [x]
-	//	- / (div)
-	
-
-	// char* token = "return";
-	char* token = "mul";
+	char* token = "let";
+	char* name = "x";
 	char* val = "6";
-	char* val1 = "3";
-	// I don't know if I want to store the type information in the val itself
-	// or will the compiler take care of that information
+	
 
 	// ACTUAL COMPILER LOGIC
 	start_assembly(out_file);
+	prolog(out_file);
 
+	evaulate_expression(out_file, "mul", 55, 4);
 
-	if(strcmp(token, "add") == 0) {
-		fprintf(out_file, "  mov rax,%s\n", val);
-		fprintf(out_file, "  mov r10,%s\n", val1);
-		fprintf(out_file, "  add rax,r10\n");
-	} else if(strcmp(token, "sub") == 0) {
-		fprintf(out_file, "  mov rax,%s\n", val);
-		fprintf(out_file, "  mov r10,%s\n", val1);
-		fprintf(out_file, "  sub rax,r10\n");
-
-	} else if(strcmp(token, "mul") == 0) {
-		fprintf(out_file, "  mov rax,%s\n", val);
-		fprintf(out_file, "  mov r10,%s\n", val1);
-		fprintf(out_file, "  imul rax,r10\n");
-
-	} else if(strcmp(token, "div") == 0) {
-		// TO BE IMPLEMENTED
-	} else if(strcmp(token, "add1") == 0) {
-		fprintf(out_file, "  mov eax,%s\n", val);
-		fprintf(out_file, "  add eax,1\n");
-
-	} else if(strcmp(token, "sub1") == 0) {
-		fprintf(out_file, "  mov eax,%s\n", val);
-		fprintf(out_file, "  sub eax,1\n");
-
+	// statements
+	if(strcmp(token, "let") == 0){
+		fprintf(out_file, "  movl $%s,-8(%%rbp)\n", val);
+		// TODO: Add the var name in the map and set the value to 8
+		// in the map -> {"val":-8(this is the offset from EBP)}
 	} else if(strcmp(token, "return") == 0) {
-		fprintf(out_file, "  mov eax,%s\n", val);
+		fprintf(out_file, "  mov %%eax,%s\n", val);
 
 	}
-
 	
+	epilog(out_file);
 	end_assembly(out_file);
 	// -------------------------------
 
 
-	// this can fail, but we don't really care about that
 	fclose(src_file);
 	fclose(out_file);
 	return 0;
