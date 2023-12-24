@@ -60,26 +60,56 @@ int main(int _argc, char** argv){
 
 	// TODOS
 	// 1. Lexing and Parsing
-	// 2. Add support for Char
+	// 2. Types
+	//	- Int [x]
+	//	- Char
+	// 3. Unary Operators
+	//	- ++ (add1)
+	//	- -- (sub1)
+	// 4. Binary Operators
+	//	- + (add) [x]
+	//	- - (sub) [x]
+	//	- * (mult) [x]
+	//	- / (div)
 	
 
 	// char* token = "return";
-	char* token = "sub1";
-	char* value = "6";
+	char* token = "mul";
+	char* val = "6";
+	char* val1 = "3";
+	// I don't know if I want to store the type information in the val itself
+	// or will the compiler take care of that information
 
 	// ACTUAL COMPILER LOGIC
 	start_assembly(out_file);
 
-	if(strcmp(token, "add1") == 0) {
-		fprintf(out_file, "  mov eax,%s\n", value);
+
+	if(strcmp(token, "add") == 0) {
+		fprintf(out_file, "  mov rax,%s\n", val);
+		fprintf(out_file, "  mov r10,%s\n", val1);
+		fprintf(out_file, "  add rax,r10\n");
+	} else if(strcmp(token, "sub") == 0) {
+		fprintf(out_file, "  mov rax,%s\n", val);
+		fprintf(out_file, "  mov r10,%s\n", val1);
+		fprintf(out_file, "  sub rax,r10\n");
+
+	} else if(strcmp(token, "mul") == 0) {
+		fprintf(out_file, "  mov rax,%s\n", val);
+		fprintf(out_file, "  mov r10,%s\n", val1);
+		fprintf(out_file, "  imul rax,r10\n");
+
+	} else if(strcmp(token, "div") == 0) {
+		// TO BE IMPLEMENTED
+	} else if(strcmp(token, "add1") == 0) {
+		fprintf(out_file, "  mov eax,%s\n", val);
 		fprintf(out_file, "  add eax,1\n");
 
 	} else if(strcmp(token, "sub1") == 0) {
-		fprintf(out_file, "  mov eax,%s\n", value);
+		fprintf(out_file, "  mov eax,%s\n", val);
 		fprintf(out_file, "  sub eax,1\n");
 
 	} else if(strcmp(token, "return") == 0) {
-		fprintf(out_file, "  mov eax,%s\n", value);
+		fprintf(out_file, "  mov eax,%s\n", val);
 
 	}
 
