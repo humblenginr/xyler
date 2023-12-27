@@ -1,1 +1,10 @@
-return 43
+KEYWORDS
+return 
+
+
+[(keyword, "int"), (id, "add"), (OPEN_PAR), (keyword, "int"), (id, x), ... ]
+
+int add(int x, int y) {
+	return x+y;
+}
+

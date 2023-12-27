@@ -93,7 +93,6 @@ int main(int _argc, char** argv){
 	char* name = "x";
 	char* val = "6";
 	
-
 	// ACTUAL COMPILER LOGIC
 	start_assembly(out_file);
 	prolog(out_file);
