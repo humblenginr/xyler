@@ -17,6 +17,11 @@ enum TokenType{
 	CLOSE_BRACE,
 	SEMICOLON,
 	COMMA, 
+	EQUAL,
+	PLUS,
+	MINUS,
+	MULTIPLY,
+	DIVISION,
 };
 
 typedef struct Token {
@@ -48,40 +53,59 @@ void get_token(char* input, Token* token){
 		return;
 	} if(!strcmp(input, "(")) {
 		token->type = OPEN_PARANTHESIS;
-		token->value = "";
+		token->value = input;
 		return;
 	} if(!strcmp(input, ")")) {
 		token->type = CLOSE_PARANTHESIS;
-		token->value = "";
+		token->value = input;
 		return;
 	} if(!strcmp(input, "{")) {
 		token->type = OPEN_BRACE;
-		token->value = "";
+		token->value = input;
 		return;
 	} if(!strcmp(input, "}")) {
 		token->type = CLOSE_BRACE;
-		token->value = "";
+		token->value = input;
 		return;
 	} if(!strcmp(input, ";")) {
 		token->type = SEMICOLON;
-		token->value = "";
+		token->value = input;
 		return;
 	} if(!strcmp(input, ",")) {
 		token->type = COMMA;
-		token->value = "";
+		token->value = input;
+		return;
+	} if(!strcmp(input, "=")) {
+		token->type = EQUAL;
+		token->value = input;
+		return;
+	} if(!strcmp(input, "+")) {
+		token->type = PLUS;
+		token->value = input;
+		return;
+	} if(!strcmp(input, "-")) {
+		token->type = MINUS;
+		token->value = input;
+		return;
+	} if(!strcmp(input, "*")) {
+		token->type = MULTIPLY;
+		token->value = input;
+		return;
+	} if(!strcmp(input, "/")) {
+		token->type = DIVISION;
+		token->value = input;
 		return;
 	} if(is_integer(input)) {
 		token->type = Integer;
 		token->value = input;
 		return;
 	}
-
 	token->type = Id;
 	token->value = input;
 }
 
 int one_char_token(char i){
-	 return i == '(' || i == ';' || i == ')' || i == '{' || i == '}' ||  i == ',';
+	 return i == '(' || i == ';' || i == ')' || i == '{' || i == '}' ||  i == ',' || i == '=' || i == '+' || i == '-' || i== '*' || i == '/' ;
 }
 
 int is_delimeter(char i){
@@ -90,33 +114,37 @@ int is_delimeter(char i){
 
 int find_next_token(char* input_str , Token* token){
 	char* buffer = malloc(sizeof(*buffer)*(25+1));
+	int buf_len = 0;
 	assert(buffer);
 	for(int i=0; i< strlen(input_str); i++){
-		if(!is_delimeter(input_str[i])){
-			buffer[i] = input_str[i];		
-			buffer[i+1] = '\0';
-		}
-		printf("Buffer: %s\n", buffer);
-		if(one_char_token(input_str[i]) || is_delimeter(input_str[i]) || i == strlen(input_str) - 1 || one_char_token(input_str[i+1])){
-			if(strlen(buffer) != 0){
-				get_token(buffer,token);
+		if(is_delimeter(input_str[i])) continue; else{
+			buffer[buf_len] = input_str[i];
+			buffer[buf_len+1] = '\0';
+			buf_len++;
+			if(one_char_token(input_str[i])){
+				get_token(buffer, token);
 				return i+1;
-			} 
+			}
+		}
+		if(is_delimeter(input_str[i+1]) || one_char_token(input_str[i+1])){
+			get_token(buffer, token);
+			return i+1;
 		}
 		
 	}
 	free(buffer);
-	return 1;
+	fprintf(stderr, "Invalid Syntax");
+	exit(1);
 }
 
 int main(){
-	char* test = "int add(int x, int y) {";
+	char* test = "int add(int x, int y) {\n    return x+y;\n}";
 	Token* tkn;
-	int i = 0;
-	while(1){
-		int s = find_next_token(test+i, tkn);
+
+	int cur_index = 0;
+	while(cur_index <= strlen(test) - 1){
+		cur_index += find_next_token(test+cur_index, tkn);
 		printf("Type: %d\n", tkn->type);
-		i += s;
 	}
 	return 0;
 }
