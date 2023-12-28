@@ -1,7 +1,10 @@
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include "common.h"
 
 // A function that when called with a filename, should return a list of tokens
 // Basically should remove whitespaces
@@ -38,7 +41,7 @@ int is_integer(char* str){
 
 // our delimeters are going to be ' ' and ';'
 void get_token(char* input, Token* token){
-	printf("Coming string: %s, Len: %d\n", input, (int)strlen(input));
+//	printf("Coming string: %s, Len: %d\n", input, (int)strlen(input));
 	if(strlen(input) == 0) {
 		fprintf(stderr, "ERROR: cannot tokenize an empty string\n");
 		exit(1);
@@ -109,7 +112,7 @@ int one_char_token(char i){
 }
 
 int is_delimeter(char i){
-	 return (i == ' ' || i == '\n');
+	 return (i == ' ' || i == '\n' || i == '\t' || i == '\0' || i == '\r');
 }
 
 int find_next_token(char* input_str , Token* token){
@@ -133,18 +136,45 @@ int find_next_token(char* input_str , Token* token){
 		
 	}
 	free(buffer);
-	fprintf(stderr, "Invalid Syntax");
-	exit(1);
+	// fprintf(stderr, "ERROR: Invalid Syntax: Got [%s] as input\n", input_str);
+	return -1;
 }
 
+
 int main(){
-	char* test = "int add(int x, int y) {\n    return x+y;\n}";
-	Token* tkn;
+	const char* filepath = "code.xy";
+	FILE *fp = fopen("code.xy", "r");
+	if(fp == NULL){
+		fprintf(stderr, "Could not open file %s:  %s", filepath, strerror(errno));
+		exit(1);
+	}
+	StringBuilder sb={0};
+
+	char ch;
+	 do {
+		ch = fgetc(fp);
+		if(ch != EOF){
+			da_append(&sb, ch);
+		}
+		// Checking if character is not EOF.
+		// If it is EOF stop reading.
+	 } while (ch != EOF);
+
+	da_append(&sb, '\0');
+	fclose(fp);
+
+	Token tkn={0};
 
 	int cur_index = 0;
-	while(cur_index <= strlen(test) - 1){
-		cur_index += find_next_token(test+cur_index, tkn);
-		printf("Type: %d\n", tkn->type);
-	}
+	while(cur_index <= strlen(sb.items) - 1){
+		int ret_val = find_next_token(sb.items+cur_index, &tkn);
+		if(ret_val == -1) {
+			// this means that no token could be formed from the given string
+			break;
+		}
+		cur_index += ret_val;
+		printf(" [%s] ", tkn.value);
+	} 
+
 	return 0;
 }
