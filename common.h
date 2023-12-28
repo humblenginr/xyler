@@ -1,3 +1,6 @@
+#ifndef COMMON_H
+#define COMMON_H
+
 #include<stdlib.h>
 #include<assert.h>
 #include <string.h>
@@ -46,3 +49,4 @@ typedef struct {
 	int capacity;
 } StringBuilder;
 
+#endif // !COMMON_H

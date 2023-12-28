@@ -4,10 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 #include "common.h"
-
-// A function that when called with a filename, should return a list of tokens
-// Basically should remove whitespaces
 
 enum TokenType{
 	None=0,
@@ -34,9 +32,11 @@ typedef struct Token {
 
 typedef struct TokenList{} TokenList;
 
-
-int is_integer(char* str){
-	return (!strcmp(str, "1") || !strcmp(str, "2") || !strcmp(str, "3") || !strcmp(str, "4") ||!strcmp(str, "4") || !strcmp(str, "5") || !strcmp(str, "6") || !strcmp(str, "7") || !strcmp(str, "8") || !strcmp(str, "9") || !strcmp(str, "0"));
+int is_integer(const char* str){
+	for (int i=0; i<strlen(str); i++) {
+		if(!isdigit(str[i])) return 0;
+	}
+	return 1;
 }
 
 // our delimeters are going to be ' ' and ';'
@@ -136,12 +136,30 @@ int find_next_token(char* input_str , Token* token){
 		
 	}
 	free(buffer);
-	// fprintf(stderr, "ERROR: Invalid Syntax: Got [%s] as input\n", input_str);
-	return -1;
+	fprintf(stderr, "ERROR: Invalid Syntax: Got [%s] as input\n", input_str);
+	exit(1);
+}
+
+int parse_source_file(const char* filepath, StringBuilder* sb){
+	FILE *fp = fopen(filepath, "r");
+	if(fp == NULL){
+		fprintf(stderr, "Could not open file %s:  %s", filepath, strerror(errno));
+		exit(1);
+	}
+	char ch;
+	 do {
+		ch = fgetc(fp);
+		if(ch != EOF){
+			da_append(sb, ch);
+		}
+	 } while (ch != EOF);
+	da_append(sb, '\0');
+	fclose(fp);
+	return 1;
 }
 
 
-int main(){
+int lex(){
 	const char* filepath = "code.xy";
 	FILE *fp = fopen("code.xy", "r");
 	if(fp == NULL){
@@ -173,7 +191,7 @@ int main(){
 			break;
 		}
 		cur_index += ret_val;
-		printf(" [%s] ", tkn.value);
+		printf(" [%s] (%d)", tkn.value, tkn.type);
 	} 
 
 	return 0;
