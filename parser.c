@@ -1,23 +1,31 @@
 #include "lex.c"
 #include "common.h"
 #include "ast.h"
+#include <stdio.h>
 #include <stdlib.h>
-
-// Grammar
-// <program> := <function>
-// <function> := "int" <id> "(" ")" "{" <statement> "}"
-// <statement> := "return" <expr> ";"
-// <expr> := <int>
 
 #define PARSE_FAIL 0
 #define PARSE_SUCCESS 1
 
-int parse_expression(StringBuilder* sb, int* lexer_idx, Expression* expr){
+int parse_return_expression(StringBuilder* sb, int* lexer_idx, ReturnExpression* expr){
 	Token tkn ={0};
 	*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
 	if(tkn.type == Integer){
-		expr->value = atoi(tkn.value);
+		struct Constant cst = {0};
+		cst.value = atoi(tkn.value);
+		expr->tag = Constant;
+		expr->data.cst = cst ;
 		return PARSE_SUCCESS;
+	} if(tkn.type == BITWISE_COMPLEMENT || tkn.type == NOT){
+		struct UnaryOperator unaryop = {0};
+		unaryop.op = tkn.value;
+		*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
+		if(tkn.type == Integer){
+			unaryop.number = atoi(tkn.value);
+			expr->tag = UnaryOperator;
+			expr->data.unaryop = unaryop;
+			return PARSE_SUCCESS;
+		} else return PARSE_FAIL;
 	} else return PARSE_FAIL;
 }
 
@@ -25,10 +33,9 @@ int parse_statement(StringBuilder* sb, int* lexer_idx, Statement* st){
 	Token tkn ={0};
 	*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
 	if(tkn.type == Keyword && !strcmp(tkn.value, "return")){
-
-		Expression* expr = malloc(sizeof(Expression));
+		ReturnExpression* expr = malloc(sizeof(ReturnExpression));
 		assert(expr != NULL);
-		if(parse_expression(sb, lexer_idx, expr)){
+		if(parse_return_expression(sb, lexer_idx, expr)){
 			st->expr = expr;
 			*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
 			if(tkn.type == SEMICOLON){
@@ -95,7 +102,7 @@ int parse_file(FILE* fp, Program* pr){
     Token tkn = {0};
     int lexer_idx = 0;
     if(parse_program(&sb, &lexer_idx, pr)){
-		printf("Program -> Function (%s) -> Statement -> Expression (%d) \n", pr->fn->name, pr->fn->st->expr->value);	
+		printf("parse_success");
 		return PARSE_SUCCESS;
 	} else return PARSE_FAIL;
 }

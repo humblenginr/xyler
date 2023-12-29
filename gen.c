@@ -67,7 +67,9 @@ void evaulate_expression(FILE* out_file, char* expr_type, int param1, int param2
 
 
 void return_statement(Statement* st, FILE* out_file){
-	fprintf(out_file, "  mov $%d,%%rax\n", st->expr->value);
+    if(st->expr->tag == Constant){
+        fprintf(out_file, "  mov $%d,%%rax\n", st->expr->data.cst.value);
+    }
 }
 
 void start_func(Function* fn,FILE* out_file){
