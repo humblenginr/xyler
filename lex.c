@@ -23,6 +23,9 @@ enum TokenType{
 	MINUS,
 	MULTIPLY,
 	DIVISION,
+
+	BITWISE_COMPLEMENT,
+	NOT,
 };
 
 typedef struct Token {
@@ -54,7 +57,15 @@ void get_token(char* input, Token* token){
 		token->type = Keyword;
 		token->value = input;
 		return;
-	} if(!strcmp(input, "(")) {
+	} if(!strcmp(input, "~")) {
+		token->type = BITWISE_COMPLEMENT;
+		token->value = input;
+		return;
+	} if(!strcmp(input, "!")) {
+		token->type = NOT;
+		token->value = input;
+		return;
+	}  if(!strcmp(input, "(")) {
 		token->type = OPEN_PARANTHESIS;
 		token->value = input;
 		return;
@@ -108,7 +119,7 @@ void get_token(char* input, Token* token){
 }
 
 int one_char_token(char i){
-	 return i == '(' || i == ';' || i == ')' || i == '{' || i == '}' ||  i == ',' || i == '=' || i == '+' || i == '-' || i== '*' || i == '/' ;
+	 return i == '(' || i == ';' || i == ')' || i == '{' || i == '}' ||  i == ',' || i == '=' || i == '+' || i == '-' || i== '*' || i == '/' || i == '!' || i == '~';
 }
 
 int is_delimeter(char i){

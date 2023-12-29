@@ -1,12 +1,25 @@
 #ifndef AST_H
 #define AST_H
 
-typedef struct {
-	int value;
-} Expression; 
+// Grammar
+// <program> := <function>
+// <function> := "int" <id> "(" ")" "{" <statement> "}"
+// <statement> := "return" <expr> ";"
+// <expr> := <int> | <unary><int>
+
+typedef struct  {
+  enum {
+    UnaryOperator,
+    Constant,
+  } tag;
+  union {
+    struct UnaryOperator { int number; char* op; } unaryop;
+    struct Constant { int value;} cst;
+  } data;
+} ReturnExpression;
 
 typedef struct {
-	Expression* expr;
+	ReturnExpression* expr;
 } Statement;
 
 typedef struct {
@@ -18,6 +31,7 @@ typedef struct {
 typedef struct {
 	Function* fn;
 } Program;
+
 
 
 
