@@ -7,7 +7,7 @@
 #define PARSE_FAIL 0
 #define PARSE_SUCCESS 1
 
-int parse_return_expression(StringBuilder* sb, int* lexer_idx, ReturnExpression* expr){
+int parse_expression(StringBuilder* sb, int* lexer_idx, Expression* expr){
 	Token tkn ={0};
 	*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
 	if(tkn.type == Integer){
@@ -16,26 +16,25 @@ int parse_return_expression(StringBuilder* sb, int* lexer_idx, ReturnExpression*
 		expr->tag = Constant;
 		expr->data.cst = cst ;
 		return PARSE_SUCCESS;
-	} if(tkn.type == BITWISE_COMPLEMENT || tkn.type == NOT){
+	} else if(tkn.type == BITWISE_COMPLEMENT || tkn.type == NOT){
 		struct UnaryOperator unaryop = {0};
 		unaryop.op = tkn.value;
-		*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
-		if(tkn.type == Integer){
-			unaryop.number = atoi(tkn.value);
-			expr->tag = UnaryOperator;
-			expr->data.unaryop = unaryop;
-			return PARSE_SUCCESS;
-		} else return PARSE_FAIL;
+		Expression* sub_expr = malloc(sizeof(Expression));
+		assert(sub_expr != NULL);
+        unaryop.expr = sub_expr;
+        expr->data.unaryop = unaryop;
+        if(!parse_expression(sb, lexer_idx, sub_expr)) return PARSE_FAIL;
+        return PARSE_SUCCESS;
 	} else return PARSE_FAIL;
 }
 
-int parse_statement(StringBuilder* sb, int* lexer_idx, Statement* st){
+int parse_statement(StringBuilder* sb, int* lexer_idx, ReturnStatement* st){
 	Token tkn ={0};
 	*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
 	if(tkn.type == Keyword && !strcmp(tkn.value, "return")){
-		ReturnExpression* expr = malloc(sizeof(ReturnExpression));
+		Expression* expr = malloc(sizeof(Expression));
 		assert(expr != NULL);
-		if(parse_return_expression(sb, lexer_idx, expr)){
+		if(parse_expression(sb, lexer_idx, expr)){
 			st->expr = expr;
 			*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
 			if(tkn.type == SEMICOLON){
@@ -58,7 +57,7 @@ int parse_function(StringBuilder* sb, int* lexer_idx, Function* fn){
 			if(tkn.type == CLOSE_PARANTHESIS){
 				*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
 				if(tkn.type == OPEN_BRACE){
-					Statement* st = malloc(sizeof(Statement));
+					ReturnStatement* st = malloc(sizeof(ReturnStatement));
 					assert(st != NULL);
 					if(parse_statement(sb, lexer_idx, st)){
 						fn->st = st;
@@ -83,7 +82,7 @@ int parse_program(StringBuilder* sb, int* lexer_idx, Program* pr){
 	} else return PARSE_FAIL;
 }
 
-void free_statement(Statement* st){
+void free_statement(ReturnStatement* st){
 	free(st->expr);
 	free(st);
 }
