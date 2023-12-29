@@ -5,9 +5,9 @@ set -xe
 
 compile () {
 	# this will output a (code.s or code.asm) file
-	clang $CFLAGS -o compiler compiler.c
-	chmod +x compiler
-	./compiler code.xy
+	clang $CFLAGS -o compiler gen.c &&
+	chmod +x compiler &&
+	./compiler code.xy &&
 	mv code.s $BUILD_DIR/code.s
 }
 

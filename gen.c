@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "ast.h"
+#include "parser.c"
+	
 char* OUTPUT_FILENAME = "code.s";
 
 // We are usig AT&T syntax for x86 assembly
@@ -18,6 +20,7 @@ void start_assembly(FILE* out_file){
 	fprintf(out_file, "  push %%rbp\n");
 	fprintf(out_file, "  mov %%rsp,%%rbp\n");
 }
+	
 
 void prolog(FILE* out_file){
 	// allot 8 bytes space for storing of local variables
@@ -27,8 +30,6 @@ void prolog(FILE* out_file){
 void epilog(FILE* out_file){
 	fprintf(out_file, "  mov %%rbp,%%rsp\n");
 }
-
-
 
 void end_assembly(FILE* out_file){
 	// C calling convention for x64
@@ -64,8 +65,32 @@ void evaulate_expression(FILE* out_file, char* expr_type, int param1, int param2
 	}
 }
 
-// NEXT FOCUS: Make it such that our compiler takes in expressions and
-// evaluate them and set the result in %rax
+
+void return_statement(Statement* st, FILE* out_file){
+	fprintf(out_file, "  mov $%d,%%rax\n", st->expr->value);
+}
+
+void start_func(Function* fn,FILE* out_file){
+	char* fn_name = fn->name;
+	fprintf(out_file, "  .globl _%s\n", fn_name);
+	fprintf(out_file, "_%s:\n", fn_name);
+	fprintf(out_file, "  push %%rbp\n");
+	fprintf(out_file, "  mov %%rsp,%%rbp\n");
+}
+
+
+void end_func(Function* fn,FILE* out_file){
+	char* fn_name = fn->name;
+	fprintf(out_file, "  pop %%rbp\n");
+	fprintf(out_file, "  ret\n");
+
+}
+
+void generate_code_from_ast(Program* pr, FILE* out_file){
+	start_func(pr->fn, out_file);	
+	return_statement(pr->fn->st, out_file);
+	end_func(pr->fn, out_file);	
+}
 
 int main(int _argc, char** argv){
 	// extract the arguments
@@ -88,6 +113,19 @@ int main(int _argc, char** argv){
 		fprintf(stderr, "ERROR: Could not open file: %s: %s\n", OUTPUT_FILENAME, strerror(errno));
 		exit(1);
 	}
+
+	Program pr = {0};
+	
+   if(!parse_file(src_file, &pr)) {
+		fprintf(stderr,"ERROR: Failed to parse the source file\n");
+		exit(1);;
+	}
+	generate_code_from_ast(&pr, out_file);
+
+	fclose(src_file);
+	fclose(out_file);
+    free_program(&pr);
+	return 0;
 
 	char* token = "let";
 	char* name = "x";

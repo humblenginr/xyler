@@ -89,15 +89,13 @@ void free_program(Program* pr){
 	free_function(pr->fn);
 }
 
-int main(){
+int parse_file(FILE* fp, Program* pr){
     StringBuilder sb = {0};
-    parse_source_file("code.xy", &sb);
+    read_source_file(fp, &sb);
     Token tkn = {0};
     int lexer_idx = 0;
-    Program pr = {0};
-    if(parse_program(&sb, &lexer_idx, &pr)){
-		printf("Program -> Function (%s) -> Statement -> Expression (%d) \n", pr.fn->name, pr.fn->st->expr->value);	
-		printf("Successfully parsed the program!");
-	} else printf("Failed to parse the program");
-    free_program(&pr);
+    if(parse_program(&sb, &lexer_idx, pr)){
+		printf("Program -> Function (%s) -> Statement -> Expression (%d) \n", pr->fn->name, pr->fn->st->expr->value);	
+		return PARSE_SUCCESS;
+	} else return PARSE_FAIL;
 }

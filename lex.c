@@ -140,12 +140,7 @@ int find_next_token(char* input_str , Token* token){
 	exit(1);
 }
 
-int parse_source_file(const char* filepath, StringBuilder* sb){
-	FILE *fp = fopen(filepath, "r");
-	if(fp == NULL){
-		fprintf(stderr, "Could not open file %s:  %s", filepath, strerror(errno));
-		exit(1);
-	}
+int read_source_file(FILE* fp, StringBuilder* sb){
 	char ch;
 	 do {
 		ch = fgetc(fp);
