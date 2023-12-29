@@ -16,7 +16,7 @@ int parse_expression(StringBuilder* sb, int* lexer_idx, Expression* expr){
 		expr->tag = Constant;
 		expr->data.cst = cst ;
 		return PARSE_SUCCESS;
-	} else if(tkn.type == BITWISE_COMPLEMENT || tkn.type == NOT){
+	} else if(tkn.type == BITWISE_COMPLEMENT || tkn.type == NOT || tkn.type == MINUS){
 		struct UnaryOperator unaryop = {0};
 		unaryop.op = tkn.value;
 		Expression* sub_expr = malloc(sizeof(Expression));

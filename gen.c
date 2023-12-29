@@ -73,6 +73,14 @@ void logical_negation(FILE* out){
     fprintf(out, "  sete %%al\n");
 }
 
+void bitwise_complement(FILE* out){
+    fprintf(out, "  not %%rax\n");
+}
+
+void neg(FILE* out){
+    fprintf(out, "  neg %%rax\n");
+}
+
 void expression(Expression* expr, FILE* out){
     if(expr->tag == Constant){
         fprintf(out, "  mov $%d,%%rax\n", expr->data.cst.value);
@@ -80,8 +88,14 @@ void expression(Expression* expr, FILE* out){
         if(!strcmp(expr->data.unaryop.op,"!")){
             expression(expr->data.unaryop.expr, out);
             logical_negation(out);
+        } else if(!strcmp(expr->data.unaryop.op,"~")){
+            expression(expr->data.unaryop.expr, out);
+            bitwise_complement(out);
+        } else if(!strcmp(expr->data.unaryop.op,"-")){
+            expression(expr->data.unaryop.expr, out);
+            neg(out);
         }
-    }
+    } 
 }
 
 void return_statement(ReturnStatement* st, FILE* out_file){

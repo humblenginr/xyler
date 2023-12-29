@@ -20,12 +20,12 @@ enum TokenType{
 	COMMA, 
 	EQUAL,
 	PLUS,
-	MINUS,
 	MULTIPLY,
 	DIVISION,
 
 	BITWISE_COMPLEMENT,
 	NOT,
+	MINUS,
 };
 
 typedef struct Token {
@@ -55,6 +55,10 @@ void get_token(char* input, Token* token){
 		return;
 	} if(!strcmp(input, "return")) {
 		token->type = Keyword;
+		token->value = input;
+		return;
+	} if(!strcmp(input, "-")) {
+		token->type = MINUS;
 		token->value = input;
 		return;
 	} if(!strcmp(input, "~")) {
@@ -97,11 +101,7 @@ void get_token(char* input, Token* token){
 		token->type = PLUS;
 		token->value = input;
 		return;
-	} if(!strcmp(input, "-")) {
-		token->type = MINUS;
-		token->value = input;
-		return;
-	} if(!strcmp(input, "*")) {
+	}  if(!strcmp(input, "*")) {
 		token->type = MULTIPLY;
 		token->value = input;
 		return;
