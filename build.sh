@@ -1,13 +1,13 @@
-CFLAGS=" -arch x86_64 -Wno-implicit-function-declaration -O0"
+CFLAGS=" -arch x86_64 -Wno-implicit-function-declaration -O0 -g"
 BUILD_DIR=./build
 
 set -xe
 
 compile () {
 	# this will output a (code.s or code.asm) file
-	clang $CFLAGS -o compiler gen.c &&
-	chmod +x compiler &&
-	./compiler code.xy &&
+	clang $CFLAGS -o $BUILD_DIR/compiler gen.c &&
+	chmod +x $BUILD_DIR/compiler &&
+	$BUILD_DIR/compiler code.xy &&
 	mv code.s $BUILD_DIR/code.s
 }
 

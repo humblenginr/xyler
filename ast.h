@@ -5,26 +5,29 @@
 // <program> := <function>
 // <function> := "int" <id> "(" ")" "{" <statement> "}"
 // <statement> := "return" <expr> ";"
-// <expr> := <int> | <unary><int>
+// <exp> := <unary_op> <exp> | <int>
+// <unary_op> := "!" | "~" 
 
-typedef struct  {
+typedef struct Expression Expression;
+
+struct Expression {
   enum {
     UnaryOperator,
     Constant,
   } tag;
   union {
-    struct UnaryOperator { int number; char* op; } unaryop;
+    struct UnaryOperator { Expression* expr; char* op; } unaryop;
     struct Constant { int value;} cst;
   } data;
-} ReturnExpression;
+};
 
 typedef struct {
-	ReturnExpression* expr;
-} Statement;
+	Expression* expr;
+} ReturnStatement;
 
 typedef struct {
 	char* name;
-	Statement* st;
+	ReturnStatement* st;
 } Function;
 
 

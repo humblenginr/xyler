@@ -66,10 +66,26 @@ void evaulate_expression(FILE* out_file, char* expr_type, int param1, int param2
 }
 
 
-void return_statement(Statement* st, FILE* out_file){
-    if(st->expr->tag == Constant){
-        fprintf(out_file, "  mov $%d,%%rax\n", st->expr->data.cst.value);
+// result will be in rax register
+void logical_negation(FILE* out){
+    fprintf(out, "  cmp $0, %%rax\n");
+    fprintf(out, "  mov $0, %%rax\n");
+    fprintf(out, "  sete %%al\n");
+}
+
+void expression(Expression* expr, FILE* out){
+    if(expr->tag == Constant){
+        fprintf(out, "  mov $%d,%%rax\n", expr->data.cst.value);
+    } else if(expr-> tag == UnaryOperator){
+        if(!strcmp(expr->data.unaryop.op,"!")){
+            expression(expr->data.unaryop.expr, out);
+            logical_negation(out);
+        }
     }
+}
+
+void return_statement(ReturnStatement* st, FILE* out_file){
+    expression(st->expr, out_file);
 }
 
 void start_func(Function* fn,FILE* out_file){
@@ -122,6 +138,7 @@ int main(int _argc, char** argv){
 		fprintf(stderr,"ERROR: Failed to parse the source file\n");
 		exit(1);;
 	}
+
 	generate_code_from_ast(&pr, out_file);
 
 	fclose(src_file);
