@@ -1,6 +1,6 @@
 # Xyler
 
-A compiler that compiles to x86-64 assembly for a language called _xyler_ that is a subset of C
+Xyler is an experimentational programming language which is a subset of C. It compiles to x86-64 assembly.
 
 ## Quick Start
 
