@@ -96,16 +96,19 @@ void expression(Expression* expr, FILE* out){
             neg(out);
         }
     } else if(expr->tag == BinaryOperator){
-        expression(expr->data.binop.expr1, out);
-        fprintf(out, "  push %%rax\n");
         expression(expr->data.binop.expr2, out);
+        fprintf(out, "  push %%rax\n");
+        expression(expr->data.binop.expr1, out);
         fprintf(out, "  pop %%r10\n");
         if(!strcmp(expr->data.binop.op,"+")){
             fprintf(out, "  add %%r10,%%rax\n");
         } else if(!strcmp(expr->data.binop.op,"*")){
             fprintf(out, "  imul %%r10,%%rax\n");
+        } else if(!strcmp(expr->data.binop.op,"-")){
+            fprintf(out, "  sub %%r10,%%rax\n");
+        } else if(!strcmp(expr->data.binop.op,"/")){
+            // TO BE IMPLEMENTED
         }
-            //fprintf(out, "  push %%rax\n");
     } 
 }
 

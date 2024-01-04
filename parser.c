@@ -132,6 +132,7 @@ int parse_statement(StringBuilder* sb, int* lexer_idx, ReturnStatement* st){
     Expression* expr = malloc(sizeof(Expression));
     assert(expr != NULL);
     if(!parse_expression(sb, lexer_idx, &expr))return PARSE_FAIL;
+
     print_expression(expr);
     printf("\n");
     fflush(stdout);
@@ -199,7 +200,7 @@ int parse_file(FILE* fp, Program* pr){
     Token tkn = {0};
     int lexer_idx = 0;
     if(parse_program(&sb, &lexer_idx, pr)){
-		printf("parse_success");
+		printf("INFO: Successfully parsed the source program\n");
 		return PARSE_SUCCESS;
 	} else return PARSE_FAIL;
 }
