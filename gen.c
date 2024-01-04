@@ -84,7 +84,7 @@ void neg(FILE* out){
 void expression(Expression* expr, FILE* out){
     if(expr->tag == Constant){
         fprintf(out, "  mov $%d,%%rax\n", expr->data.cst.value);
-    } else if(expr-> tag == UnaryOperator){
+    } else if(expr->tag == UnaryOperator){
         if(!strcmp(expr->data.unaryop.op,"!")){
             expression(expr->data.unaryop.expr, out);
             logical_negation(out);
@@ -95,6 +95,17 @@ void expression(Expression* expr, FILE* out){
             expression(expr->data.unaryop.expr, out);
             neg(out);
         }
+    } else if(expr->tag == BinaryOperator){
+        expression(expr->data.binop.expr1, out);
+        fprintf(out, "  push %%rax\n");
+        expression(expr->data.binop.expr2, out);
+        fprintf(out, "  pop %%r10\n");
+        if(!strcmp(expr->data.binop.op,"+")){
+            fprintf(out, "  add %%r10,%%rax\n");
+        } else if(!strcmp(expr->data.binop.op,"*")){
+            fprintf(out, "  imul %%r10,%%rax\n");
+        }
+            //fprintf(out, "  push %%rax\n");
     } 
 }
 
@@ -103,7 +114,7 @@ void return_statement(ReturnStatement* st, FILE* out_file){
 }
 
 void start_func(Function* fn,FILE* out_file){
-	char* fn_name = fn->name;
+    char* fn_name = fn->name;
 	fprintf(out_file, "  .globl _%s\n", fn_name);
 	fprintf(out_file, "_%s:\n", fn_name);
 	fprintf(out_file, "  push %%rbp\n");

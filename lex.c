@@ -1,11 +1,12 @@
 #include <assert.h>
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <ctype.h>
 #include "common.h"
+
+#define LEX_SUCCESS 1
+#define LEX_FAIL 1
 
 enum TokenType{
 	None=0,
@@ -20,12 +21,12 @@ enum TokenType{
 	COMMA, 
 	EQUAL,
 	PLUS,
+	MINUS,
 	MULTIPLY,
 	DIVISION,
 
 	BITWISE_COMPLEMENT,
 	NOT,
-	MINUS,
 };
 
 typedef struct Token {
@@ -33,7 +34,10 @@ typedef struct Token {
 	char* value;
 } Token;
 
-typedef struct TokenList{} TokenList;
+void free_token(Token* tk){
+    free(tk->value);
+    free(tk);
+}
 
 int is_integer(const char* str){
 	for (int i=0; i<strlen(str); i++) {
@@ -146,7 +150,6 @@ int find_next_token(char* input_str , Token* token){
 		}
 		
 	}
-	free(buffer);
 	fprintf(stderr, "ERROR: Invalid Syntax: Got [%s] as input\n", input_str);
 	exit(1);
 }
@@ -160,45 +163,6 @@ int read_source_file(FILE* fp, StringBuilder* sb){
 		}
 	 } while (ch != EOF);
 	da_append(sb, '\0');
-	fclose(fp);
 	return 1;
 }
 
-
-int lex(){
-	const char* filepath = "code.xy";
-	FILE *fp = fopen("code.xy", "r");
-	if(fp == NULL){
-		fprintf(stderr, "Could not open file %s:  %s", filepath, strerror(errno));
-		exit(1);
-	}
-	StringBuilder sb={0};
-
-	char ch;
-	 do {
-		ch = fgetc(fp);
-		if(ch != EOF){
-			da_append(&sb, ch);
-		}
-		// Checking if character is not EOF.
-		// If it is EOF stop reading.
-	 } while (ch != EOF);
-
-	da_append(&sb, '\0');
-	fclose(fp);
-
-	Token tkn={0};
-
-	int cur_index = 0;
-	while(cur_index <= strlen(sb.items) - 1){
-		int ret_val = find_next_token(sb.items+cur_index, &tkn);
-		if(ret_val == -1) {
-			// this means that no token could be formed from the given string
-			break;
-		}
-		cur_index += ret_val;
-		printf(" [%s] (%d)", tkn.value, tkn.type);
-	} 
-
-	return 0;
-}

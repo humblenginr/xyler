@@ -7,10 +7,51 @@
 #define PARSE_FAIL 0
 #define PARSE_SUCCESS 1
 
-int parse_expression(StringBuilder* sb, int* lexer_idx, Expression* expr){
+int parse_factor(StringBuilder* sb, int* lexer_idx, Expression* expr);
+int parse_expression(StringBuilder* sb, int* lexer_idx, Expression** expr);
+int parse_term(StringBuilder* sb, int* lexer_idx, Expression** expr);
+
+
+int parse_term(StringBuilder* sb, int* lexer_idx, Expression** expr){
+    Expression* cur_term = malloc(sizeof(*cur_term));
+    assert(cur_term != NULL);
+
+    if(!parse_factor(sb, lexer_idx, cur_term)) return PARSE_FAIL;
+
+    Token tkn ={0};
+	int next_idx = find_next_token(sb->items+(*lexer_idx), &tkn);
+
+    while(tkn.type == MULTIPLY | tkn.type == DIVISION) {
+        *lexer_idx += next_idx;
+        Expression* sub_factor = malloc(sizeof(Expression));
+        assert(sub_factor != NULL);
+        if(!parse_factor(sb, lexer_idx, sub_factor)) return PARSE_FAIL;
+
+
+        Expression* bin = malloc(sizeof(*bin));
+        assert(bin != NULL);
+
+        bin->tag = BinaryOperator;
+        bin->data.binop.op = tkn.value;
+        bin->data.binop.expr1 = cur_term;
+        bin->data.binop.expr2 = sub_factor;
+
+        // might be a problem.. verify with debugger once
+        cur_term = bin;
+
+        next_idx = find_next_token(sb->items+(*lexer_idx), &tkn);
+    }
+
+    *expr = cur_term;
+
+    return PARSE_SUCCESS;
+}
+
+int parse_factor(StringBuilder* sb, int* lexer_idx, Expression* expr){
 	Token tkn ={0};
 	*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
-	if(tkn.type == Integer){
+    
+    if(tkn.type == Integer){
 		struct Constant cst = {0};
 		cst.value = atoi(tkn.value);
 		expr->tag = Constant;
@@ -23,9 +64,63 @@ int parse_expression(StringBuilder* sb, int* lexer_idx, Expression* expr){
 		assert(sub_expr != NULL);
         unaryop.expr = sub_expr;
         expr->data.unaryop = unaryop;
-        if(!parse_expression(sb, lexer_idx, sub_expr)) return PARSE_FAIL;
+        if(!parse_expression(sb, lexer_idx, &sub_expr)) return PARSE_FAIL;
         return PARSE_SUCCESS;
-	} else return PARSE_FAIL;
+	} else if(tkn.type == OPEN_PARANTHESIS){
+        if(!parse_expression(sb, lexer_idx, &expr)) return PARSE_FAIL;
+
+        *lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
+        if(!(tkn.type == CLOSE_PARANTHESIS)) return PARSE_FAIL;
+        return PARSE_SUCCESS;
+    } else return PARSE_FAIL;
+}
+
+int parse_expression(StringBuilder* sb, int* lexer_idx, Expression** expr){
+    Expression* cur_exp = malloc(sizeof(*cur_exp));
+    assert(cur_exp != NULL);
+
+    if(!parse_term(sb, lexer_idx, &cur_exp)) return PARSE_FAIL;
+
+    Token tkn ={0};
+	int next_idx = find_next_token(sb->items+(*lexer_idx), &tkn);
+
+    while(tkn.type == PLUS | tkn.type == MINUS) {
+        *lexer_idx += next_idx;
+        Expression* sub_term = malloc(sizeof(Expression));
+        assert(sub_term != NULL);
+        if(!parse_term(sb, lexer_idx, &sub_term)) return PARSE_FAIL;
+
+        Expression* bin = malloc(sizeof(*bin));
+        assert(bin != NULL);
+
+        bin->tag = BinaryOperator;
+        bin->data.binop.op = tkn.value;
+        bin->data.binop.expr1 = cur_exp;
+        bin->data.binop.expr2 = sub_term;
+
+        // might be a problem.. verify with debugger once
+        cur_exp = bin;
+
+        next_idx = find_next_token(sb->items+(*lexer_idx), &tkn);
+    }
+
+    *expr = cur_exp;
+    return PARSE_SUCCESS;
+}
+
+void print_expression(Expression* expr){
+    if(expr->tag == Constant){
+        printf("Cst%d", expr->data.cst.value);
+        return;
+    } else if(expr->tag == BinaryOperator){
+        printf("(");
+        print_expression(expr->data.binop.expr1);
+        printf(")");
+        printf(" %s ", expr->data.binop.op);
+        printf("(");
+        print_expression(expr->data.binop.expr2);
+        printf(")");
+    }
 }
 
 int parse_statement(StringBuilder* sb, int* lexer_idx, ReturnStatement* st){
@@ -36,7 +131,11 @@ int parse_statement(StringBuilder* sb, int* lexer_idx, ReturnStatement* st){
 
     Expression* expr = malloc(sizeof(Expression));
     assert(expr != NULL);
-    if(!parse_expression(sb, lexer_idx, expr))return PARSE_FAIL;
+    if(!parse_expression(sb, lexer_idx, &expr))return PARSE_FAIL;
+    print_expression(expr);
+    printf("\n");
+    fflush(stdout);
+
     st->expr = expr;
 
     *lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
