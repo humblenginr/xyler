@@ -7,8 +7,8 @@
 // <statement> := "return" <expr> ";"
 // <exp> := <term> { ("+" | "-") <term> }
 // <term> := <factor> {("*" | "/") <factor>}
-// <factor> := "(" <expr> ")" | <unary_op> <exp> | <constant>
-// <unary_op> := "!" | "~" 
+// <factor> := "(" <expr> ")" | <unary_op> <term> | <constant>
+// <unary_op> := "!" | "~" | "-"
 
 typedef struct Expression Expression;
 

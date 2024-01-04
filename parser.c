@@ -58,13 +58,13 @@ int parse_factor(StringBuilder* sb, int* lexer_idx, Expression** expr){
 		(*expr)->data.cst = cst ;
 		return PARSE_SUCCESS;
 	} else if(tkn.type == BITWISE_COMPLEMENT || tkn.type == NOT || tkn.type == MINUS){
-		struct UnaryOperator unaryop = {0};
-		unaryop.op = tkn.value;
-		Expression* sub_expr = malloc(sizeof(Expression));
+		Expression* sub_expr = malloc(sizeof(Expression*));
 		assert(sub_expr != NULL);
-        unaryop.expr = sub_expr;
-        (*expr)->data.unaryop = unaryop;
-        if(!parse_expression(sb, lexer_idx, &sub_expr)) return PARSE_FAIL;
+
+        (*expr)->tag = UnaryOperator;
+        (*expr)->data.unaryop.op = tkn.value;
+        if(!parse_term(sb, lexer_idx, &sub_expr)) return PARSE_FAIL;
+        (*expr)->data.unaryop.expr = sub_expr;
         return PARSE_SUCCESS;
 	} else if(tkn.type == OPEN_PARANTHESIS){
         if(!parse_expression(sb, lexer_idx, expr)) return PARSE_FAIL;
@@ -119,6 +119,10 @@ void print_expression(Expression* expr){
         printf(" %s ", expr->data.binop.op);
         printf("(");
         print_expression(expr->data.binop.expr2);
+        printf(")");
+    } else if(expr->tag == UnaryOperator){
+        printf("(%s", expr->data.unaryop.op);
+        print_expression(expr->data.unaryop.expr);
         printf(")");
     }
 }
