@@ -7,7 +7,7 @@
 #define PARSE_FAIL 0
 #define PARSE_SUCCESS 1
 
-int parse_factor(StringBuilder* sb, int* lexer_idx, Expression* expr);
+int parse_factor(StringBuilder* sb, int* lexer_idx, Expression** expr);
 int parse_expression(StringBuilder* sb, int* lexer_idx, Expression** expr);
 int parse_term(StringBuilder* sb, int* lexer_idx, Expression** expr);
 
@@ -16,7 +16,7 @@ int parse_term(StringBuilder* sb, int* lexer_idx, Expression** expr){
     Expression* cur_term = malloc(sizeof(*cur_term));
     assert(cur_term != NULL);
 
-    if(!parse_factor(sb, lexer_idx, cur_term)) return PARSE_FAIL;
+    if(!parse_factor(sb, lexer_idx, &cur_term)) return PARSE_FAIL;
 
     Token tkn ={0};
 	int next_idx = find_next_token(sb->items+(*lexer_idx), &tkn);
@@ -25,7 +25,7 @@ int parse_term(StringBuilder* sb, int* lexer_idx, Expression** expr){
         *lexer_idx += next_idx;
         Expression* sub_factor = malloc(sizeof(Expression));
         assert(sub_factor != NULL);
-        if(!parse_factor(sb, lexer_idx, sub_factor)) return PARSE_FAIL;
+        if(!parse_factor(sb, lexer_idx, &sub_factor)) return PARSE_FAIL;
 
 
         Expression* bin = malloc(sizeof(*bin));
@@ -47,15 +47,15 @@ int parse_term(StringBuilder* sb, int* lexer_idx, Expression** expr){
     return PARSE_SUCCESS;
 }
 
-int parse_factor(StringBuilder* sb, int* lexer_idx, Expression* expr){
+int parse_factor(StringBuilder* sb, int* lexer_idx, Expression** expr){
 	Token tkn ={0};
 	*lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
     
     if(tkn.type == Integer){
 		struct Constant cst = {0};
 		cst.value = atoi(tkn.value);
-		expr->tag = Constant;
-		expr->data.cst = cst ;
+		(*expr)->tag = Constant;
+		(*expr)->data.cst = cst ;
 		return PARSE_SUCCESS;
 	} else if(tkn.type == BITWISE_COMPLEMENT || tkn.type == NOT || tkn.type == MINUS){
 		struct UnaryOperator unaryop = {0};
@@ -63,11 +63,11 @@ int parse_factor(StringBuilder* sb, int* lexer_idx, Expression* expr){
 		Expression* sub_expr = malloc(sizeof(Expression));
 		assert(sub_expr != NULL);
         unaryop.expr = sub_expr;
-        expr->data.unaryop = unaryop;
+        (*expr)->data.unaryop = unaryop;
         if(!parse_expression(sb, lexer_idx, &sub_expr)) return PARSE_FAIL;
         return PARSE_SUCCESS;
 	} else if(tkn.type == OPEN_PARANTHESIS){
-        if(!parse_expression(sb, lexer_idx, &expr)) return PARSE_FAIL;
+        if(!parse_expression(sb, lexer_idx, expr)) return PARSE_FAIL;
 
         *lexer_idx += find_next_token(sb->items+(*lexer_idx), &tkn);
         if(!(tkn.type == CLOSE_PARANTHESIS)) return PARSE_FAIL;
